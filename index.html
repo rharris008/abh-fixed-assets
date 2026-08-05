@@ -108,6 +108,16 @@ tr:hover td{background:#f7f9fc}
         <div class="tile-amount">$453,441</div>
         <div class="tile-count">39 items</div>
     </div>
+    <div class="tile" onclick="filterCategory('General Equipment')" data-cat="General Equipment" style="background:#2471A3">
+        <div class="tile-label">General Equipment</div>
+        <div class="tile-amount">$0</div>
+        <div class="tile-count">0 items</div>
+    </div>
+    <div class="tile" onclick="filterCategory('Recopak Errector')" data-cat="Recopak Errector" style="background:#BA4A00">
+        <div class="tile-label">Recopak Errector</div>
+        <div class="tile-amount">$0</div>
+        <div class="tile-count">0 items</div>
+    </div>
     <div class="tile" onclick="filterCategory('Uncategorised')" data-cat="Uncategorised" style="background:#95A5A6">
         <div class="tile-label">Uncategorised</div>
         <div class="tile-amount">$22,877</div>
@@ -126,6 +136,8 @@ tr:hover td{background:#f7f9fc}
 <option value="Pipework and Tanks">Pipework and Tanks</option>
 <option value="Hunt Boilers">Hunt Boilers</option>
 <option value="Leasehold Improvements">Leasehold Improvements</option>
+<option value="General Equipment">General Equipment</option>
+<option value="Recopak Errector">Recopak Errector</option>
 <option value="Uncategorised">Uncategorised</option>
 
   </select></label>
@@ -3134,7 +3146,7 @@ tr:hover td{background:#f7f9fc}
     <input type="number" id="newAmount" step="0.01">
     <label>Category</label>
     <select id="newCat">
-      <option value="HMPS Machine">HMPS Machine</option><option value="Scholle Fillers">Scholle Fillers</option><option value="Rinser and Labeller">Rinser and Labeller</option><option value="Reverse Osmosis Unit">Reverse Osmosis Unit</option><option value="Pipework and Tanks">Pipework and Tanks</option><option value="Hunt Boilers">Hunt Boilers</option><option value="Leasehold Improvements">Leasehold Improvements</option>
+      <option value="HMPS Machine">HMPS Machine</option><option value="Scholle Fillers">Scholle Fillers</option><option value="Rinser and Labeller">Rinser and Labeller</option><option value="Reverse Osmosis Unit">Reverse Osmosis Unit</option><option value="Pipework and Tanks">Pipework and Tanks</option><option value="Hunt Boilers">Hunt Boilers</option><option value="Leasehold Improvements">Leasehold Improvements</option><option value="General Equipment">General Equipment</option><option value="Recopak Errector">Recopak Errector</option>
       <option value="Uncategorised">Uncategorised</option>
     </select>
     <label>GL Account</label>
@@ -3166,7 +3178,7 @@ tr:hover td{background:#f7f9fc}
 </div>
 <script>
 // Embedded NS data
-const CAT_COLOURS = {"HMPS Machine": "#1B2A4A", "Scholle Fillers": "#0E7CCE", "Rinser and Labeller": "#27AE60", "Reverse Osmosis Unit": "#C0392B", "Pipework and Tanks": "#E67E22", "Hunt Boilers": "#8E44AD", "Leasehold Improvements": "#16A085", "Uncategorised": "#95A5A6"};
+const CAT_COLOURS = {"HMPS Machine": "#1B2A4A", "Scholle Fillers": "#0E7CCE", "Rinser and Labeller": "#27AE60", "Reverse Osmosis Unit": "#C0392B", "Pipework and Tanks": "#E67E22", "Hunt Boilers": "#8E44AD", "Leasehold Improvements": "#16A085", "General Equipment": "#2471A3", "Recopak Errector": "#BA4A00", "Uncategorised": "#95A5A6"};
 
 // Local storage additions
 function getManualItems() {

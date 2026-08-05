@@ -3231,18 +3231,24 @@ function applyFilters() {
     if (tile) tile.classList.add('active');
   }
   
+  const deleted = getDeletedRows(); // never re-show a deleted row
   const rows = document.querySelectorAll('#tableBody tr');
   let count = 0, total = 0;
   rows.forEach(row => {
+    // Keep deleted rows hidden regardless of filter state
+    if (deleted.includes(rowKey(row))) {
+      row.style.display = 'none';
+      return;
+    }
     const rowCat = row.dataset.cat;
     const rowMemo = row.dataset.memo || '';
     const rowVendor = row.dataset.vendor || '';
     const cells = row.querySelectorAll('td');
     const rowText = Array.from(cells).map(c => c.textContent.toLowerCase()).join(' ');
-    
+
     const catMatch = !cat || rowCat === cat;
     const searchMatch = !search || rowText.includes(search) || rowMemo.includes(search) || rowVendor.includes(search);
-    
+
     if (catMatch && searchMatch) {
       row.style.display = '';
       count++;

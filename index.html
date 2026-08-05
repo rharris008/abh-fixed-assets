@@ -30,7 +30,7 @@ body{font-family:Arial,sans-serif;background:#f4f6f9;color:#333;font-size:13px;h
 .summary-bar{padding:8px 30px;background:#fff;font-size:12px;color:#666;border-bottom:1px solid #eee}
 .summary-bar span{font-weight:bold;color:#1B2A4A}
 .table-wrap{padding:0 30px 30px;overflow-x:auto;overflow-y:auto;flex:1;min-height:0}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1);margin-top:12px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.1);margin-top:12px}
 th{background:#1B2A4A;color:#fff;padding:10px 12px;text-align:left;font-size:12px;font-weight:bold;cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0;z-index:2}
 th:hover{background:#243d6b}
 th.sorted-asc::after{content:' ▲'}
@@ -51,6 +51,11 @@ tr:hover td{background:#f7f9fc}
 .modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
 .btn-save{background:#1B2A4A;color:#fff;border:none;border-radius:4px;padding:8px 20px;cursor:pointer;font-family:Arial,sans-serif;font-size:13px}
 .btn-cancel{background:#eee;color:#333;border:none;border-radius:4px;padding:8px 20px;cursor:pointer;font-family:Arial,sans-serif;font-size:13px}
+
+.btn-icon{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:13px;line-height:1;opacity:.7;transition:opacity .15s}
+.btn-icon:hover{opacity:1}
+.action-cell{width:56px;text-align:center;white-space:nowrap}
+.modal select{width:100%;border:1px solid #ccc;border-radius:4px;padding:6px 10px;font-family:Arial,sans-serif;font-size:13px;margin-top:4px;margin-bottom:14px}
 </style>
 </head>
 <body>
@@ -142,6 +147,7 @@ tr:hover td{background:#f7f9fc}
   <th onclick="sortTable(5)">GL Account</th>
   <th onclick="sortTable(6)">Category</th>
   <th onclick="sortTable(7)">Site</th>
+  <th style="cursor:default;width:56px">Actions</th>
 </tr>
 </thead>
 <tbody id="tableBody">
@@ -3146,6 +3152,18 @@ tr:hover td{background:#f7f9fc}
   </div>
 </div>
 
+
+<div class="modal-overlay" id="catEditModal">
+  <div class="modal">
+    <h2>Edit Category</h2>
+    <label>New Category</label>
+    <select id="catEditSelect"></select>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeCatEdit()">Cancel</button>
+      <button class="btn-save" onclick="saveCatEdit()">Save</button>
+    </div>
+  </div>
+</div>
 <script>
 // Embedded NS data
 const CAT_COLOURS = {"HMPS Machine": "#1B2A4A", "Scholle Fillers": "#0E7CCE", "Rinser and Labeller": "#27AE60", "Reverse Osmosis Unit": "#C0392B", "Pipework and Tanks": "#E67E22", "Hunt Boilers": "#8E44AD", "Leasehold Improvements": "#16A085", "Uncategorised": "#95A5A6"};
@@ -3161,6 +3179,8 @@ function saveManualItems(arr) {
 function buildManualRow(item) {
   const colour = CAT_COLOURS[item.category] || '#999';
   const memo = item.memo.length > 80 ? item.memo.substring(0,80)+'...' : item.memo;
+  const amt = parseFloat(item.amount) || 0;
+  const delBtn = amt === 0 ? ` <button class="btn-icon" onclick="deleteNilRow(this)" title="Delete nil entry" style="color:#C0392B">&#128465;</button>` : '';
   return `<tr data-cat="${item.category}" data-memo="${item.memo.toLowerCase()}" data-vendor="${item.vendor.toLowerCase()}" class="manual-row">
     <td>${item.date}</td>
     <td title="${item.vendor}">${item.vendor} <em style="color:#0E7CCE;font-size:10px">(manual)</em></td>
@@ -3170,6 +3190,7 @@ function buildManualRow(item) {
     <td>${item.accountname}</td>
     <td><span class="cat-badge" style="background:${colour}">${item.category}</span></td>
     <td>${item.site || 'Erskine Park'}</td>
+    <td class="action-cell"><button class="btn-icon" onclick="openCatEdit(this)" title="Edit category">&#9998;</button>${delBtn}</td>
   </tr>`;
 }
 
@@ -3310,8 +3331,114 @@ function saveNewAsset() {
   ['newDate','newVendor','newTranid','newMemo','newAmount'].forEach(id => document.getElementById(id).value = '');
 }
 
+// =========== CATEGORY OVERRIDES ===========
+function getCatOverrides() {
+  try { return JSON.parse(localStorage.getItem('abh_cat_overrides') || '{}'); } catch(e) { return {}; }
+}
+function saveCatOverrides(obj) {
+  localStorage.setItem('abh_cat_overrides', JSON.stringify(obj));
+}
+
+// =========== DELETED ROWS ===========
+function getDeletedRows() {
+  try { return JSON.parse(localStorage.getItem('abh_deleted_rows') || '[]'); } catch(e) { return []; }
+}
+function saveDeletedRows(arr) {
+  localStorage.setItem('abh_deleted_rows', JSON.stringify(arr));
+}
+
+function rowKey(row) {
+  const cells = row.querySelectorAll('td');
+  if (cells.length < 3) return '';
+  return (cells[0].textContent.trim() + '|' + cells[1].textContent.replace('(manual)','').trim() + '|' + cells[2].textContent.trim());
+}
+
+// =========== EDIT CATEGORY ===========
+function openCatEdit(btn) {
+  const row = btn.closest('tr');
+  const currentCat = row.dataset.cat;
+  const cats = Object.keys(CAT_COLOURS);
+  const sel = document.getElementById('catEditSelect');
+  sel.innerHTML = cats.map(c => `<option value="${c}"${c===currentCat?' selected':''} >${c}</option>`).join('');
+  const modal = document.getElementById('catEditModal');
+  modal.dataset.rowKey = rowKey(row);
+  modal.classList.add('open');
+}
+function saveCatEdit() {
+  const modal = document.getElementById('catEditModal');
+  const key = modal.dataset.rowKey;
+  const newCat = document.getElementById('catEditSelect').value;
+  const overrides = getCatOverrides();
+  overrides[key] = newCat;
+  saveCatOverrides(overrides);
+  modal.classList.remove('open');
+  applyStoredChanges();
+  applyFilters();
+}
+function closeCatEdit() {
+  document.getElementById('catEditModal').classList.remove('open');
+}
+
+// =========== DELETE NIL ROW ===========
+function deleteNilRow(btn) {
+  if (!confirm('Delete this nil entry? It will be hidden from the register.')) return;
+  const row = btn.closest('tr');
+  const key = rowKey(row);
+  const deleted = getDeletedRows();
+  if (!deleted.includes(key)) {
+    deleted.push(key);
+    saveDeletedRows(deleted);
+  }
+  row.style.display = 'none';
+  applyFilters();
+}
+
+// =========== APPLY STORED CHANGES ===========
+function applyStoredChanges() {
+  const overrides = getCatOverrides();
+  const deleted = getDeletedRows();
+
+  document.querySelectorAll('#tableBody tr').forEach(row => {
+    const key = rowKey(row);
+    const cells = row.querySelectorAll('td');
+    if (!cells.length) return;
+
+    // Hide deleted rows
+    if (deleted.includes(key)) {
+      row.style.display = 'none';
+    }
+
+    // Apply category override
+    if (overrides[key]) {
+      const newCat = overrides[key];
+      const colour = CAT_COLOURS[newCat] || '#999';
+      row.dataset.cat = newCat;
+      const badge = row.querySelector('.cat-badge');
+      if (badge) {
+        badge.textContent = newCat;
+        badge.style.background = colour;
+      }
+    }
+
+    // Inject action cell if missing
+    if (!row.querySelector('.action-cell')) {
+      const amtText = cells[4] ? cells[4].textContent.replace(/[$,]/g,'') : '';
+      const amt = parseFloat(amtText) || 0;
+      const actionTd = document.createElement('td');
+      actionTd.className = 'action-cell';
+      let html = `<button class="btn-icon" onclick="openCatEdit(this)" title="Edit category">&#9998;</button>`;
+      if (amt === 0) {
+        html += ` <button class="btn-icon" onclick="deleteNilRow(this)" title="Delete nil entry" style="color:#C0392B">&#128465;</button>`;
+      }
+      actionTd.innerHTML = html;
+      row.appendChild(actionTd);
+    }
+  });
+}
+
 // Init
 loadManualRows();
+applyStoredChanges();
 </script>
 </body>
 </html>

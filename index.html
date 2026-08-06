@@ -51,6 +51,9 @@ tr:hover td{background:#f7f9fc}
 .modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
 .btn-save{background:#1B2A4A;color:#fff;border:none;border-radius:4px;padding:8px 20px;cursor:pointer;font-family:Arial,sans-serif;font-size:13px}
 .btn-cancel{background:#eee;color:#333;border:none;border-radius:4px;padding:8px 20px;cursor:pointer;font-family:Arial,sans-serif;font-size:13px}
+.action-cell{width:56px;text-align:center;white-space:nowrap}
+.btn-icon{background:none;border:none;cursor:pointer;font-size:15px;color:#555;padding:2px 4px;border-radius:3px}
+.btn-icon:hover{background:#eee}
 
 .tab-nav{display:flex;gap:0;margin:0 16px 0 16px;border-bottom:2px solid #e0e4ed}
 .tab-btn{padding:10px 22px;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#666;background:none;border:none;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
@@ -188,6 +191,7 @@ tr:hover td{background:#f7f9fc}
   <th onclick="sortTable(5)">GL Account</th>
   <th onclick="sortTable(6)">Category</th>
   <th onclick="sortTable(7)">Site</th>
+  <th style="cursor:default;width:56px">Actions</th>
 </tr>
 </thead>
 <tbody id="tableBody">
@@ -3211,6 +3215,19 @@ tr:hover td{background:#f7f9fc}
   </div>
 </div>
 
+<!-- Edit Category Modal -->
+<div class="modal-overlay" id="catEditModal">
+  <div class="modal">
+    <h2>Edit Category</h2>
+    <label>Category</label>
+    <select id="catEditSelect"></select>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeCatEdit()">Cancel</button>
+      <button class="btn-save" onclick="saveCatEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Embedded NS data
 const CAT_COLOURS = {"HMPS Machine": "#1B2A4A", "Scholle Fillers": "#0E7CCE", "Rinser and Labeller": "#27AE60", "Reverse Osmosis Unit": "#C0392B", "Pipework and Tanks": "#E67E22", "Boiler": "#8E44AD", "Boiler room": "#C0392B", "Leasehold Improvements": "#16A085", "Uncategorised": "#95A5A6"};
@@ -3235,6 +3252,7 @@ function buildManualRow(item) {
     <td>${item.accountname}</td>
     <td><span class="cat-badge" style="background:${colour}">${item.category}</span></td>
     <td>${item.site || 'Erskine Park'}</td>
+    <td class="action-cell"><button class="btn-icon" onclick="openCatEdit(this)" title="Edit category">&#9998;</button></td>
   </tr>`;
 }
 
@@ -3399,7 +3417,103 @@ function saveNewAsset() {
 }
 
 
-// showTab replaced below
+// =========== CATEGORY OVERRIDES ===========
+function getCatOverrides() {
+  try { return JSON.parse(localStorage.getItem('abh_cat_overrides') || '{}'); } catch(e) { return {}; }
+}
+function saveCatOverrides(obj) {
+  localStorage.setItem('abh_cat_overrides', JSON.stringify(obj));
+}
+
+// =========== DELETED ROWS ===========
+function getDeletedRows() {
+  try { return JSON.parse(localStorage.getItem('abh_deleted_rows') || '[]'); } catch(e) { return []; }
+}
+function saveDeletedRows(arr) {
+  localStorage.setItem('abh_deleted_rows', JSON.stringify(arr));
+}
+
+function rowKey(row) {
+  const cells = row.querySelectorAll('td');
+  if (cells.length < 3) return '';
+  return (cells[0].textContent.trim() + '|' + cells[1].textContent.replace('(manual)','').trim() + '|' + cells[2].textContent.trim());
+}
+
+// =========== EDIT CATEGORY ===========
+function openCatEdit(btn) {
+  const row = btn.closest('tr');
+  const currentCat = row.dataset.cat;
+  const cats = Object.keys(CAT_COLOURS);
+  const sel = document.getElementById('catEditSelect');
+  sel.innerHTML = cats.map(c => `<option value="${c}"${c===currentCat?' selected':''} >${c}</option>`).join('');
+  const modal = document.getElementById('catEditModal');
+  modal.dataset.rowKey = rowKey(row);
+  modal.classList.add('open');
+}
+function saveCatEdit() {
+  const modal = document.getElementById('catEditModal');
+  const key = modal.dataset.rowKey;
+  const newCat = document.getElementById('catEditSelect').value;
+  const overrides = getCatOverrides();
+  overrides[key] = newCat;
+  saveCatOverrides(overrides);
+  modal.classList.remove('open');
+  applyStoredChanges();
+  applyFilters();
+  updateTiles();
+}
+function closeCatEdit() {
+  document.getElementById('catEditModal').classList.remove('open');
+}
+
+// =========== DELETE NIL ROW ===========
+function deleteNilRow(btn) {
+  if (!confirm('Delete this nil entry? It will be hidden from the register.')) return;
+  const row = btn.closest('tr');
+  const key = rowKey(row);
+  const deleted = getDeletedRows();
+  if (!deleted.includes(key)) { deleted.push(key); saveDeletedRows(deleted); }
+  row.style.display = 'none';
+  applyFilters();
+  updateTiles();
+}
+
+// =========== APPLY STORED CHANGES ===========
+function applyStoredChanges() {
+  const overrides = getCatOverrides();
+  const deleted = getDeletedRows();
+
+  document.querySelectorAll('#tableBody tr').forEach(row => {
+    const key = rowKey(row);
+    const cells = row.querySelectorAll('td');
+    if (!cells.length) return;
+
+    if (deleted.includes(key)) { row.style.display = 'none'; }
+
+    if (overrides[key]) {
+      const newCat = overrides[key];
+      const colour = CAT_COLOURS[newCat] || '#999';
+      row.dataset.cat = newCat;
+      const badge = row.querySelector('.cat-badge');
+      if (badge) { badge.textContent = newCat; badge.style.background = colour; }
+    }
+
+    if (!row.querySelector('.action-cell')) {
+      const amtText = cells[4] ? cells[4].textContent.replace(/[$,]/g,'') : '';
+      const amt = parseFloat(amtText) || 0;
+      const actionTd = document.createElement('td');
+      actionTd.className = 'action-cell';
+      let html = `<button class="btn-icon" onclick="openCatEdit(this)" title="Edit category">&#9998;</button>`;
+      if (amt === 0) {
+        html += ` <button class="btn-icon" onclick="deleteNilRow(this)" title="Delete nil entry" style="color:#C0392B">&#128465;</button>`;
+      }
+      actionTd.innerHTML = html;
+      row.appendChild(actionTd);
+    }
+  });
+}
+
+// showTab
 
 function buildSupplierView() {
   const totals = {}, counts = {}, cats = {};
@@ -3541,6 +3655,8 @@ function buildYearView() {
 
 // Init
 loadManualRows();
+applyStoredChanges();
+updateTiles();
 </script>
 </body>
 </html>

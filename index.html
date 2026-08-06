@@ -3215,6 +3215,7 @@ function loadManualRows() {
     tbody.insertAdjacentHTML('beforeend', buildManualRow(item));
   });
   applyFilters();
+  updateTiles();
 }
 
 // Filtering
@@ -3274,6 +3275,34 @@ function applyFilters() {
   
   document.getElementById('visibleCount').textContent = count;
   document.getElementById('visibleTotal').textContent = '$' + total.toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// Update tiles from actual table data (not hardcoded HTML)
+function updateTiles() {
+  const deleted = getDeletedRows();
+  const catTotals = {}, catCounts = {};
+  Object.keys(CAT_COLOURS).forEach(c => { catTotals[c] = 0; catCounts[c] = 0; });
+
+  document.querySelectorAll('#tableBody tr').forEach(row => {
+    if (deleted.includes(rowKey(row))) return;
+    const cat = row.dataset.cat || 'Uncategorised';
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 5) return;
+    const amt = parseFloat(cells[4].textContent.replace(/[$,]/g, '')) || 0;
+    if (catTotals[cat] === undefined) { catTotals[cat] = 0; catCounts[cat] = 0; }
+    catTotals[cat] += amt;
+    catCounts[cat]++;
+  });
+
+  document.querySelectorAll('.tile').forEach(tile => {
+    const cat = tile.dataset.cat;
+    const amt = catTotals[cat] || 0;
+    const cnt = catCounts[cat] || 0;
+    const amtEl = tile.querySelector('.tile-amount');
+    const cntEl = tile.querySelector('.tile-count');
+    if (amtEl) amtEl.textContent = '$' + Math.round(amt).toLocaleString('en-AU');
+    if (cntEl) cntEl.textContent = cnt + ' item' + (cnt !== 1 ? 's' : '');
+  });
 }
 
 function clearFilters() {
@@ -3409,6 +3438,7 @@ function deleteNilRow(btn) {
   }
   row.style.display = 'none';
   applyFilters();
+  updateTiles();
 }
 
 // =========== APPLY STORED CHANGES ===========
@@ -3457,6 +3487,7 @@ function applyStoredChanges() {
 // Init
 loadManualRows();
 applyStoredChanges();
+updateTiles();
 </script>
 </body>
 </html>

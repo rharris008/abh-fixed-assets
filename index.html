@@ -3421,6 +3421,7 @@ function saveCatEdit() {
   modal.classList.remove('open');
   applyStoredChanges();
   applyFilters();
+  updateTiles();
 }
 function closeCatEdit() {
   document.getElementById('catEditModal').classList.remove('open');

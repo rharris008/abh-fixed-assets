@@ -6,38 +6,24 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
-
-      - name: Prepare deploy folder
-        run: |
-          mkdir -p /tmp/deploy
-          cp index.html /tmp/deploy/index.html
-          touch /tmp/deploy/.nojekyll
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
         with:
-          path: '/tmp/deploy'
+          fetch-depth: 0
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Push index.html to gh-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages
+          git checkout gh-pages
+          cp $GITHUB_WORKSPACE/index.html ./index.html 2>/dev/null || git show origin/main:index.html > ./index.html
+          git add index.html
+          git diff --cached --quiet && echo "No changes to deploy" || git commit -m "Deploy from main [skip ci]"
+          git push origin gh-pages

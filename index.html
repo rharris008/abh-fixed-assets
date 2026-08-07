@@ -3506,7 +3506,7 @@ function applyStoredChanges() {
     const cells = row.querySelectorAll('td');
     if (!cells.length) return;
 
-    if (deleted.includes(key)) { row.style.display = 'none'; }
+    if (deleted.includes(key)) { row.style.display = 'none'; return; }
 
     if (overrides[key]) {
       const newCat = overrides[key];

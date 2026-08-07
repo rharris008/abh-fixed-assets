@@ -3642,10 +3642,11 @@ function showTab(tab) {
 function buildDepView() {
   try {
     // ---- Policy ----
-    // Leasehold Improvements + Boiler room: 7 years straight-line from 1 Nov 2026
-    // All other categories: 10 years straight-line from purchase date
+    // Leasehold Improvements + Boiler room: 7 years straight-line from 1 Nov 2025
+    // All other assets: 10 years straight-line from 1 Nov 2026 (site came online)
     const SEVEN_YR_CATS = new Set(['Leasehold Improvements', 'Boiler room']);
-    const DEP_START_7YR  = new Date(2026, 10, 1); // 1 Nov 2026
+    const DEP_START_7YR  = new Date(2025, 10, 1); // 1 Nov 2025
+    const DEP_START_10YR = new Date(2026, 10, 1); // 1 Nov 2026
     const MONTHS_7YR     = 84;
     const MONTHS_10YR    = 120;
 
@@ -3685,8 +3686,8 @@ function buildDepView() {
         if (month >= addMths(DEP_START_7YR, MONTHS_7YR)) return 0;
         return asset.amt / MONTHS_7YR;
       } else {
-        if (month < asset.purchase) return 0;
-        if (month >= addMths(asset.purchase, MONTHS_10YR)) return 0;
+        if (month < DEP_START_10YR) return 0;
+        if (month >= addMths(DEP_START_10YR, MONTHS_10YR)) return 0;
         return asset.amt / MONTHS_10YR;
       }
     }
@@ -3764,12 +3765,12 @@ function buildDepView() {
       <div style="font-size:10px;opacity:.65;margin-top:2px;">${assets.length} assets</div>
     </div>
     <div style="background:${AMBER};color:${WHITE};border-radius:8px;padding:14px 20px;flex:1;min-width:180px;">
-      <div style="font-size:10px;opacity:.85;margin-bottom:4px;">7-YEAR GROUP (from Nov 2026)</div>
+      <div style="font-size:10px;opacity:.85;margin-bottom:4px;">7-YEAR GROUP (from Nov 2025)</div>
       <div style="font-size:20px;font-weight:700;">${fmtM(cost7yr)}</div>
       <div style="font-size:10px;opacity:.8;margin-top:2px;">${fmtM(cost7yr/MONTHS_7YR)}/month &bull; Leasehold + Boiler room</div>
     </div>
     <div style="background:#2980B9;color:${WHITE};border-radius:8px;padding:14px 20px;flex:1;min-width:180px;">
-      <div style="font-size:10px;opacity:.85;margin-bottom:4px;">10-YEAR GROUP (from purchase date)</div>
+      <div style="font-size:10px;opacity:.85;margin-bottom:4px;">10-YEAR GROUP (from Nov 2026)</div>
       <div style="font-size:20px;font-weight:700;">${fmtM(cost10yr)}</div>
       <div style="font-size:10px;opacity:.8;margin-top:2px;">All machines &amp; equipment</div>
     </div>
@@ -3796,8 +3797,8 @@ function buildDepView() {
     </tbody>
   </table>
   <p style="font-size:10px;color:#888;margin-top:12px;">
-    Policy: Leasehold Improvements + Boiler room — 7 years straight-line from 1 Nov 2026.
-    All other assets — 10 years straight-line from purchase date.
+    Policy: Leasehold Improvements + Boiler room — 7 years straight-line from 1 Nov 2025.
+    All other assets — 10 years straight-line from 1 Nov 2026 (site came online).
     Amounts calculated live from assets currently visible in the register.
   </p>
 </div>`;

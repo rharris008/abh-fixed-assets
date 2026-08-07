@@ -3661,6 +3661,8 @@ function buildDepView() {
     }
 
     // ---- Collect assets from DOM ----
+    // Manual items are already injected into #tableBody as .manual-row by loadManualRows().
+    // Do NOT call getManualItems() separately — that would double-count them.
     const assets = [];
     document.querySelectorAll('#tableBody tr').forEach(row => {
       if (row.style.display === 'none') return;
@@ -3669,13 +3671,6 @@ function buildDepView() {
       const purchase = parseDate(cells[0].textContent.trim());
       const cat = row.dataset.cat || 'Uncategorised';
       const amt = parseFloat(cells[4].textContent.replace(/[$,]/g, '')) || 0;
-      if (purchase && amt > 0) assets.push({ cat, purchase, amt });
-    });
-    // Include manual localStorage items
-    getManualItems().forEach(item => {
-      const purchase = parseDate(item.date);
-      const cat = item.category || 'Uncategorised';
-      const amt = parseFloat(item.amount) || 0;
       if (purchase && amt > 0) assets.push({ cat, purchase, amt });
     });
 

@@ -3535,29 +3535,31 @@ function applyStoredChanges() {
 
 function buildSupplierView() {
   try {
-    // Use pre-computed SUPPLIER_DATA plus any manual items from localStorage
-    const data = JSON.parse(JSON.stringify(SUPPLIER_DATA)); // clone
-    const manuals = getManualItems();
-    const manualMap = {};
-    manuals.forEach(item => {
-      const v = item.vendor;
-      if (!manualMap[v]) manualMap[v] = {total:0, count:0, cats:new Set()};
-      manualMap[v].total += parseFloat(item.amount) || 0;
-      manualMap[v].count++;
-      if (item.category) manualMap[v].cats.add(item.category);
+    // Build live from DOM — same source as the main table so totals always match
+    const vendorMap = {};
+    document.querySelectorAll('#tableBody tr').forEach(row => {
+      if (row.style.display === 'none') return;
+      const cells = row.querySelectorAll('td');
+      if (cells.length < 5) return;
+      const vendor = cells[1].textContent.replace('(manual)','').trim();
+      const cat    = row.dataset.cat || 'Uncategorised';
+      const amt    = parseFloat(cells[4].textContent.replace(/[$,]/g,'')) || 0;
+      if (!vendorMap[vendor]) vendorMap[vendor] = {total:0, count:0, cats:new Set()};
+      vendorMap[vendor].total += amt;
+      vendorMap[vendor].count++;
+      vendorMap[vendor].cats.add(cat);
     });
-    // Merge manual items into data
-    Object.entries(manualMap).forEach(([v, m]) => {
-      const existing = data.find(d => d.vendor === v);
-      if (existing) {
-        existing.total += m.total;
-        existing.count += m.count;
-        m.cats.forEach(c => { if (!existing.cats.includes(c)) existing.cats.push(c); });
-      } else {
-        data.push({vendor: v, total: m.total, count: m.count, cats: [...m.cats], pct: 0});
-      }
+    // Include manual items from localStorage
+    getManualItems().forEach(item => {
+      const v = item.vendor || 'Unknown';
+      if (!vendorMap[v]) vendorMap[v] = {total:0, count:0, cats:new Set()};
+      vendorMap[v].total += parseFloat(item.amount) || 0;
+      vendorMap[v].count++;
+      if (item.category) vendorMap[v].cats.add(item.category);
     });
-    data.sort((a,b) => b.total - a.total);
+    const data = Object.entries(vendorMap).map(([vendor, d]) => ({
+      vendor, total: d.total, count: d.count, cats: [...d.cats].sort()
+    })).sort((a,b) => b.total - a.total);
     const grand = data.reduce((s,d) => s + d.total, 0);
     const maxSpend = data[0] ? data[0].total : 1;
     const fmtMoney = n => '$' + Math.round(n).toLocaleString('en-AU');
@@ -3568,7 +3570,7 @@ function buildSupplierView() {
     tbody.innerHTML = data.map((d, i) => {
       const pct = grand ? (d.total / grand * 100).toFixed(1) : '0.0';
       const barW = Math.round(d.total / maxSpend * 100);
-      const catList = (d.cats || []).sort().join(', ');
+      const catList = d.cats.join(', ');
       return `<tr>
         <td style="color:#999;font-size:10px">${i+1}</td>
         <td style="font-weight:600">${d.vendor}</td>

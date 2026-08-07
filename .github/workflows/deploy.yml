@@ -21,9 +21,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Save index.html from main BEFORE switching branches
+          cp index.html /tmp/deploy_index.html
           git fetch origin gh-pages
           git checkout gh-pages
-          cp $GITHUB_WORKSPACE/index.html ./index.html 2>/dev/null || git show origin/main:index.html > ./index.html
+          cp /tmp/deploy_index.html index.html
           git add index.html
           git diff --cached --quiet && echo "No changes to deploy" || git commit -m "Deploy from main [skip ci]"
           git push origin gh-pages

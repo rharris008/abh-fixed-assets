@@ -148,6 +148,11 @@ tr:hover td{background:#f7f9fc}
         <div class="tile-amount">$453,441</div>
         <div class="tile-count">39 items</div>
     </div>
+    <div class="tile" onclick="filterCategory('General Equipment')" data-cat="General Equipment" style="background:#5D6D7E">
+        <div class="tile-label">General Equipment</div>
+        <div class="tile-amount"></div>
+        <div class="tile-count"></div>
+    </div>
     <div class="tile" onclick="filterCategory('Uncategorised')" data-cat="Uncategorised" style="background:#95A5A6">
         <div class="tile-label">Uncategorised</div>
         <div class="tile-amount">$22,877</div>
@@ -176,6 +181,7 @@ tr:hover td{background:#f7f9fc}
 <option value="Boiler">Boiler</option>
 <option value="Boiler room">Boiler room</option>
 <option value="Leasehold Improvements">Leasehold Improvements</option>
+<option value="General Equipment">General Equipment</option>
 <option value="Uncategorised">Uncategorised</option>
 
   </select></label>
@@ -3208,7 +3214,7 @@ tr:hover td{background:#f7f9fc}
     <input type="number" id="newAmount" step="0.01">
     <label>Category</label>
     <select id="newCat">
-      <option value="HMPS Machine">HMPS Machine</option><option value="Scholle Fillers">Scholle Fillers</option><option value="Rinser and Labeller">Rinser and Labeller</option><option value="Recopak Erector">Recopak Erector</option><option value="Reverse Osmosis Unit">Reverse Osmosis Unit</option><option value="Pipework and Tanks">Pipework and Tanks</option><option value="Boiler">Boiler</option><option value="Boiler room">Boiler room</option><option value="Leasehold Improvements">Leasehold Improvements</option>
+      <option value="HMPS Machine">HMPS Machine</option><option value="Scholle Fillers">Scholle Fillers</option><option value="Rinser and Labeller">Rinser and Labeller</option><option value="Recopak Erector">Recopak Erector</option><option value="Reverse Osmosis Unit">Reverse Osmosis Unit</option><option value="Pipework and Tanks">Pipework and Tanks</option><option value="Boiler">Boiler</option><option value="Boiler room">Boiler room</option><option value="Leasehold Improvements">Leasehold Improvements</option><option value="General Equipment">General Equipment</option>
       <option value="Uncategorised">Uncategorised</option>
     </select>
     <label>GL Account</label>
@@ -3241,7 +3247,7 @@ tr:hover td{background:#f7f9fc}
 
 <script>
 // Embedded NS data
-const CAT_COLOURS = {"HMPS Machine": "#1B2A4A", "Scholle Fillers": "#0E7CCE", "Rinser and Labeller": "#27AE60", "Recopak Erector": "#2980B9", "Reverse Osmosis Unit": "#C0392B", "Pipework and Tanks": "#E67E22", "Boiler": "#8E44AD", "Boiler room": "#C0392B", "Leasehold Improvements": "#16A085", "Uncategorised": "#95A5A6"};
+const CAT_COLOURS = {"HMPS Machine": "#1B2A4A", "Scholle Fillers": "#0E7CCE", "Rinser and Labeller": "#27AE60", "Recopak Erector": "#2980B9", "Reverse Osmosis Unit": "#C0392B", "Pipework and Tanks": "#E67E22", "Boiler": "#8E44AD", "Boiler room": "#C0392B", "Leasehold Improvements": "#16A085", "General Equipment": "#5D6D7E", "Uncategorised": "#95A5A6"};
 const SUPPLIER_DATA = [{"vendor":"HMPS Pty Ltd","total":551536.52,"count":26,"cats":["HMPS Machine"],"pct":15.8},{"vendor":"Scholle IPN Pty Ltd","total":469040.0,"count":4,"cats":["Scholle Fillers"],"pct":13.4},{"vendor":"VEOLIA WATER SYSTEMS","total":466834.08,"count":8,"cats":["Reverse Osmosis Unit"],"pct":13.4},{"vendor":"John Leaver Engineering Services","total":335405.41,"count":44,"cats":["HMPS Machine","Pipework and Tanks","Rinser and Labeller"],"pct":9.6},{"vendor":"Goldman Plumbing Services Pty Ltd","total":310658.51,"count":55,"cats":["Boiler room","Pipework and Tanks","Reverse Osmosis Unit"],"pct":8.9},{"vendor":"Paul Clancy Electrical Pty Ltd","total":198255.0,"count":19,"cats":["Leasehold Improvements"],"pct":5.7},{"vendor":"Euroka Projects","total":191764.73,"count":4,"cats":["Boiler room","Leasehold Improvements"],"pct":5.5},{"vendor":"Impresstik Labelling systems","total":127629.47,"count":5,"cats":["Rinser and Labeller"],"pct":3.7},{"vendor":"Hunt Boilers","total":108100.0,"count":11,"cats":["Boiler"],"pct":3.1},{"vendor":"Arc Industrial Systems Pty Ltd","total":95462.92,"count":57,"cats":["Boiler room","HMPS Machine","Pipework and Tanks","Reverse Osmosis Unit","Uncategorised"],"pct":2.7},{"vendor":"PGG Energy Pty Ltd","total":77403.99,"count":3,"cats":["Leasehold Improvements"],"pct":2.2},{"vendor":"Splatt Engineering Group","total":71500.0,"count":4,"cats":["Pipework and Tanks","Rinser and Labeller"],"pct":2.0},{"vendor":"Floor Finishes by Ken","total":65280.0,"count":1,"cats":["Leasehold Improvements"],"pct":1.9},{"vendor":"RECOPAK","total":60330.0,"count":4,"cats":["Recopak Erector"],"pct":1.7},{"vendor":"Stanless Tank & Mix Pty Ltd","total":49750.0,"count":2,"cats":["Pipework and Tanks"],"pct":1.4},{"vendor":"General Pump Company","total":48252.2,"count":8,"cats":["Pipework and Tanks","Reverse Osmosis Unit"],"pct":1.4},{"vendor":"Pulford & Sons Pty Ltd","total":43840.8,"count":6,"cats":["Leasehold Improvements","Pipework and Tanks","Rinser and Labeller"],"pct":1.3},{"vendor":"Crest Air Conditioning","total":42714.0,"count":3,"cats":["Boiler room","Leasehold Improvements"],"pct":1.2},{"vendor":"Dexion Logistics","total":34580.0,"count":4,"cats":["Leasehold Improvements"],"pct":1.0},{"vendor":"Insignia Pty Ltd","total":26907.6,"count":2,"cats":["Rinser and Labeller"],"pct":0.8},{"vendor":"Pall Corporation","total":26505.7,"count":3,"cats":["Reverse Osmosis Unit"],"pct":0.8},{"vendor":"MD Piping Services Pty Ltd","total":25448.0,"count":9,"cats":["Boiler","Pipework and Tanks"],"pct":0.7},{"vendor":"F. A. Maker Pty. Ltd.","total":20000.0,"count":1,"cats":["Pipework and Tanks"],"pct":0.6},{"vendor":"Australian Wrapping Company P/L","total":14900.0,"count":2,"cats":["Uncategorised"],"pct":0.4},{"vendor":"BM Plus G Pty Ltd","total":9045.0,"count":3,"cats":["Leasehold Improvements"],"pct":0.3},{"vendor":"Reno Group Pty Ltd","total":8780.0,"count":1,"cats":["Leasehold Improvements"],"pct":0.3},{"vendor":"FlameSafe Fire Protection Pty.Limited","total":4920.0,"count":2,"cats":["Boiler room"],"pct":0.1},{"vendor":"Produce Direct & Pet Centre","total":2627.27,"count":1,"cats":["Uncategorised"],"pct":0.1},{"vendor":"Realserve Pty Ltd","total":1940.0,"count":1,"cats":["Leasehold Improvements"],"pct":0.1},{"vendor":"SMC Corporation (Australia) Pty Ltd","total":1408.69,"count":2,"cats":["Pipework and Tanks"],"pct":0.0},{"vendor":"Icon Equipment International Pty Ltd","total":999.0,"count":1,"cats":["Pipework and Tanks"],"pct":0.0}];
 
 // Local storage additions
@@ -3631,13 +3637,13 @@ function buildYearView() {
   try {
     const CAT_ORDER = [
       'Leasehold Improvements','HMPS Machine','Scholle Fillers','Rinser and Labeller',
-      'Recopak Erector','Pipework and Tanks','Reverse Osmosis Unit','Boiler','Boiler room','Uncategorised'
+      'Recopak Erector','Pipework and Tanks','Reverse Osmosis Unit','Boiler','Boiler room','General Equipment','Uncategorised'
     ];
     const CAT_COL = {
       'Leasehold Improvements':'#16A085','HMPS Machine':'#1B2A4A','Scholle Fillers':'#0E7CCE',
       'Rinser and Labeller':'#27AE60','Recopak Erector':'#2980B9',
       'Pipework and Tanks':'#E67E22','Reverse Osmosis Unit':'#C0392B',
-      'Boiler':'#8E44AD','Boiler room':'#C0392B','Uncategorised':'#95A5A6'
+      'Boiler':'#8E44AD','Boiler room':'#C0392B','General Equipment':'#5D6D7E','Uncategorised':'#95A5A6'
     };
     const fyTotals = {}, fyCounts = {};
     const allFYs = new Set();

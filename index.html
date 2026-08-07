@@ -3332,13 +3332,13 @@ function applyFilters() {
   
   document.getElementById('visibleCount').textContent = count;
   document.getElementById('visibleTotal').textContent = '$' + total.toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2});
+  updateTiles();
 }
 
 function updateTiles() {
   const cats = {};
-  const deleted = getDeletedRows();
   document.querySelectorAll('#tableBody tr').forEach(row => {
-    if (deleted.includes(rowKey(row))) return;
+    if (row.style.display === 'none') return;
     const cat = row.dataset.cat;
     if (!cat) return;
     if (!cats[cat]) cats[cat] = { total: 0, count: 0 };
@@ -3718,7 +3718,7 @@ function buildYearView() {
 // Init
 loadManualRows();
 applyStoredChanges();
-updateTiles();
+applyFilters();
 // Pre-build both views so they render immediately on first tab click
 try { buildSupplierView(); } catch(e) { console.error('buildSupplierView init:', e); }
 try { buildYearView(); } catch(e) { console.error('buildYearView init:', e); }

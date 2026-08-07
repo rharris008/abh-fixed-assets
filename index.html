@@ -3661,13 +3661,22 @@ function buildDepView() {
     }
 
     // ---- Collect assets from DOM ----
-    // Manual items are already injected into #tableBody as .manual-row by loadManualRows().
-    // Do NOT call getManualItems() separately — that would double-count them.
+    // Read ALL rows regardless of current filter state — depreciation applies to
+    // every asset, not just whatever category is currently visible.
+    // Exclude only rows that have been explicitly deleted (abh_deleted_rows).
+    // Manual items are already injected into #tableBody as .manual-row — do NOT
+    // call getManualItems() separately, that would double-count them.
+    const deletedKeys = new Set(JSON.parse(localStorage.getItem('abh_deleted_rows') || '[]'));
+    function rowKey(cells) {
+      return (cells[0].textContent.trim() + '|' +
+              cells[1].textContent.replace('(manual)','').trim() + '|' +
+              cells[2].textContent.trim());
+    }
     const assets = [];
     document.querySelectorAll('#tableBody tr').forEach(row => {
-      if (row.style.display === 'none') return;
       const cells = row.querySelectorAll('td');
       if (cells.length < 5) return;
+      if (deletedKeys.has(rowKey(cells))) return;
       const purchase = parseDate(cells[0].textContent.trim());
       const cat = row.dataset.cat || 'Uncategorised';
       const amt = parseFloat(cells[4].textContent.replace(/[$,]/g, '')) || 0;
